@@ -199,15 +199,19 @@ pub fn rx_info_to_gw_info(rx_info_set: &[gw::UplinkRxInfo]) -> Result<Vec<GWInfo
 
         out.push(GWInfoElement {
             id: gw_id.to_be_bytes()[4..8].to_vec(),
+            antenna_id: Some(rx_info.antenna),
             fine_recv_time: rx_info
                 .fine_time_since_gps_epoch
                 .as_ref()
                 .map(|v| v.nanos as usize),
+            frt_context: [].to_vec(),
             rf_region: "".to_string(),
+            rf_paramset_id: "".to_string(),
             rssi: Some(rx_info.rssi as isize),
             snr: Some(rx_info.snr),
             lat: rx_info.location.as_ref().map(|v| v.latitude),
             lon: rx_info.location.as_ref().map(|v| v.longitude),
+            alt: rx_info.location.as_ref().map(|v| v.altitude),
             ul_token: rx_info.encode_to_vec(),
             dl_allowed: Some(true),
         });
@@ -219,7 +223,8 @@ pub fn rx_info_to_gw_info(rx_info_set: &[gw::UplinkRxInfo]) -> Result<Vec<GWInfo
 pub fn ul_meta_data_to_rx_info(ul_meta_data: &ULMetaData) -> Result<Vec<gw::UplinkRxInfo>> {
     let mut out: Vec<gw::UplinkRxInfo> = Vec::new();
     for gw_info in &ul_meta_data.gw_info {
-        out.push(gw::UplinkRxInfo {
+        let mut rx_info = gw::UplinkRxInfo {
+            antenna: gw_info.antenna_id.unwrap(),
             gateway_id: hex::encode(&gw_info.id),
             context: gw_info.ul_token.clone(),
             rssi: gw_info.rssi.unwrap_or_default() as i32,
@@ -228,6 +233,7 @@ pub fn ul_meta_data_to_rx_info(ul_meta_data: &ULMetaData) -> Result<Vec<gw::Upli
                 Some(common::Location {
                     latitude: gw_info.lat.unwrap(),
                     longitude: gw_info.lon.unwrap(),
+                    altitude: gw_info.alt.unwrap(),
                     ..Default::default()
                 })
             } else {
@@ -244,7 +250,14 @@ pub fn ul_meta_data_to_rx_info(ul_meta_data: &ULMetaData) -> Result<Vec<gw::Upli
                 None
             },
             ..Default::default()
-        });
+        };
+        if !gw_info.rf_paramset_id.is_empty() {
+            rx_info.metadata.insert("RFParamSetID".to_string(), gw_info.rf_paramset_id.clone());
+        }
+        if !gw_info.frt_context.is_empty() {
+            rx_info.metadata.insert("FRTContext".to_string(), hex::encode(&gw_info.frt_context));
+        }
+        out.push(rx_info);
     }
 
     Ok(out)

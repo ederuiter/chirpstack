@@ -986,8 +986,17 @@ pub struct GWInfoElement {
         skip_serializing_if = "Vec::is_empty"
     )]
     pub id: Vec<u8>,
+    #[serde(rename = "AntennaID")]
+    pub antenna_id: Option<u32>,
     #[serde(rename = "FineRecvTime")]
     pub fine_recv_time: Option<usize>,
+    #[serde(
+        default,
+        rename = "FRTContext",
+        with = "hex_encode",
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub frt_context: Vec<u8>,
     #[serde(
         default,
         rename = "RFRegion",
@@ -995,6 +1004,11 @@ pub struct GWInfoElement {
         skip_serializing_if = "String::is_empty"
     )]
     pub rf_region: String,
+    #[serde(
+        rename = "RFParamSetID",
+        skip_serializing_if = "String::is_empty"
+    )]
+    pub rf_paramset_id: String,
     #[serde(rename = "RSSI")]
     pub rssi: Option<isize>,
     #[serde(rename = "SNR")]
@@ -1003,6 +1017,8 @@ pub struct GWInfoElement {
     pub lat: Option<f64>,
     #[serde(rename = "Lon")]
     pub lon: Option<f64>,
+    #[serde(rename = "Alt")]
+    pub alt: Option<f64>,
     #[serde(
         default,
         rename = "ULToken",
