@@ -981,7 +981,7 @@ impl Default for ULMetaData {
 pub struct GWInfoElement {
     #[serde(
         default,
-        rename = "ID",
+        rename = "GWID",
         with = "hex_encode",
         skip_serializing_if = "Vec::is_empty"
     )]
